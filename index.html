@@ -2,61 +2,626 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Uren invoeren</title>
+  <title>Urenregistratie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; }
-    label { display: block; margin-top: 10px; }
-    input, textarea, button { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    button { margin-top: 15px; cursor: pointer; }
+    :root {
+      --bg: #0f172a;
+      --card: #0b1220;
+      --card-alt: #020617;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+      --radius-lg: 18px;
+      --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 960px;
+      padding: 20px 16px 40px;
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--card), var(--card-alt));
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 18px 16px 24px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 span.badge {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        padding: 22px 24px 28px;
+      }
+      .grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      }
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="week"] {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="week"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .week-display {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+    }
+
+    .timesheet-wrapper {
+      margin-top: 18px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 50%);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 0.84rem;
+    }
+
+    thead {
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    thead th {
+      font-weight: 600;
+      color: var(--muted);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .project-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .project-name {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 7px 10px;
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+
+    .project-name::placeholder {
+      color: #6b7280;
+    }
+
+    .project-type {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 5px 9px;
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .hour-input {
+      width: 100%;
+      max-width: 70px;
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 6px 6px;
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .hour-input:focus,
+    .project-name:focus,
+    .project-type:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .row-total {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tfoot {
+      background: rgba(15, 23, 42, 0.98);
+    }
+
+    tfoot td {
+      font-weight: 600;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    tfoot td.label {
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #0b1120;
+      box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4);
+      margin-top: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(14, 165, 233, 0.5);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--muted);
+      border-color: rgba(55, 65, 81, 0.9);
+      box-shadow: none;
+      width: auto;
+      padding-inline: 14px;
+      font-size: 0.82rem;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(15, 23, 42, 0.99);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      font-size: 14px;
+    }
+
+    .btn-remove-row {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 6px;
+    }
+
+    .btn-remove-row:hover {
+      color: var(--danger);
+    }
+
+    .footer-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .footer-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .btn {
+        width: auto;
+      }
+    }
+
+    .summary-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
-  <h1>Uren invoeren</h1>
+  <div class="page">
+    <div class="card">
+      <h1>
+        Urenregistratie
+        <span class="badge">Mobiele timesheet</span>
+      </h1>
+      <div class="subtitle">
+        Vul je uren per project in. Maandag t/m zaterdag, met automatisch weeknummer en totalen.
+      </div>
 
-  <form id="urenForm">
-    <label>
-      Naam
-      <input type="text" id="naam" required />
-    </label>
+      <form id="timesheetForm">
+        <div class="grid">
+          <div>
+            <label for="employeeName">Naam werknemer</label>
+            <input type="text" id="employeeName" placeholder="Bijv. Jan Jansen" required />
+          </div>
+          <div>
+            <label for="weekInput">Week</label>
+            <input type="week" id="weekInput" required />
+            <div class="week-display">
+              <span class="pill">
+                <span class="pill-dot"></span>
+                <span id="weekLabel">Geen week gekozen</span>
+              </span>
+            </div>
+          </div>
+        </div>
 
-    <label>
-      Datum
-      <input type="date" id="datum" required />
-    </label>
+        <div class="timesheet-wrapper">
+          <div class="table-scroll">
+            <table id="timesheetTable">
+              <thead>
+                <tr>
+                  <th>Project / waarop boeken</th>
+                  <th>Ma</th>
+                  <th>Di</th>
+                  <th>Wo</th>
+                  <th>Do</th>
+                  <th>Vr</th>
+                  <th>Za</th>
+                  <th>Totaal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="timesheetBody">
+                <tr class="timesheet-row">
+                  <td>
+                    <div class="project-cell">
+                      <input
+                        type="text"
+                        class="project-name"
+                        placeholder="Projectnaam of klant"
+                        required
+                      />
+                      <select class="project-type">
+                        <option value="Project">Project</option>
+                        <option value="Service">Service / nazorg</option>
+                        <option value="Reistijd">Reistijd</option>
+                        <option value="Vakantie">Vakantie</option>
+                        <option value="Ziek">Ziek</option>
+                        <option value="Overig">Overig</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-0" /></td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-1" /></td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-2" /></td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-3" /></td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-4" /></td>
+                  <td><input type="number" min="0" step="0.25" class="hour-input day-5" /></td>
+                  <td class="row-total">0</td>
+                  <td>
+                    <button type="button" class="btn-remove-row" title="Regel verwijderen">×</button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td class="label">Totaal per dag</td>
+                  <td id="totalDay0">0</td>
+                  <td id="totalDay1">0</td>
+                  <td id="totalDay2">0</td>
+                  <td id="totalDay3">0</td>
+                  <td id="totalDay4">0</td>
+                  <td id="totalDay5">0</td>
+                  <td id="weekTotal">0</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
 
-    <label>
-      Aantal uren
-      <input type="number" id="uren" step="0.25" required />
-    </label>
+        <div class="footer-row">
+          <button type="button" id="addRowBtn" class="btn-secondary">
+            <span class="btn-icon">＋</span>
+            Extra project / regel
+          </button>
+          <div class="summary-text">
+            Totalen worden automatisch bijgewerkt. Verstuur met één druk op de knop via WhatsApp.
+          </div>
+        </div>
 
-    <label>
-      Omschrijving
-      <textarea id="omschrijving" rows="4" required></textarea>
-    </label>
-
-    <button type="submit">Verstuur via WhatsApp</button>
-  </form>
+        <button type="submit" class="btn">
+          <span>Verstuur timesheet via WhatsApp</span>
+        </button>
+      </form>
+    </div>
+  </div>
 
   <script>
-    document.getElementById('urenForm').addEventListener('submit', function (e) {
+    const bodyEl = document.getElementById("timesheetBody");
+    const addRowBtn = document.getElementById("addRowBtn");
+    const weekInput = document.getElementById("weekInput");
+    const weekLabel = document.getElementById("weekLabel");
+    const form = document.getElementById("timesheetForm");
+
+    const totalDayEls = [
+      document.getElementById("totalDay0"),
+      document.getElementById("totalDay1"),
+      document.getElementById("totalDay2"),
+      document.getElementById("totalDay3"),
+      document.getElementById("totalDay4"),
+      document.getElementById("totalDay5"),
+    ];
+    const weekTotalEl = document.getElementById("weekTotal");
+
+    function parseNumber(v) {
+      const n = parseFloat(v.replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    }
+
+    function recalcRow(row) {
+      const inputs = row.querySelectorAll(".hour-input");
+      let sum = 0;
+      inputs.forEach((input) => {
+        sum += parseNumber(input.value || "0");
+      });
+      row.querySelector(".row-total").textContent = sum.toFixed(2).replace(".", ",");
+      return sum;
+    }
+
+    function recalcTotals() {
+      const rows = bodyEl.querySelectorAll(".timesheet-row");
+      const dayTotals = [0, 0, 0, 0, 0, 0];
+      let weekTotal = 0;
+
+      rows.forEach((row) => {
+        const inputs = row.querySelectorAll(".hour-input");
+        inputs.forEach((input, idx) => {
+          const v = parseNumber(input.value || "0");
+          dayTotals[idx] += v;
+        });
+      });
+
+      dayTotals.forEach((total, idx) => {
+        totalDayEls[idx].textContent = total.toFixed(2).replace(".", ",");
+        weekTotal += total;
+      });
+
+      weekTotalEl.textContent = weekTotal.toFixed(2).replace(".", ",");
+    }
+
+    // Event delegation voor alle inputs
+    bodyEl.addEventListener("input", (e) => {
+      if (e.target.classList.contains("hour-input")) {
+        const row = e.target.closest(".timesheet-row");
+        recalcRow(row);
+        recalcTotals();
+      }
+    });
+
+    // Regel toevoegen
+    addRowBtn.addEventListener("click", () => {
+      const firstRow = bodyEl.querySelector(".timesheet-row");
+      const newRow = firstRow.cloneNode(true);
+
+      newRow.querySelector(".project-name").value = "";
+      newRow.querySelector(".project-type").selectedIndex = 0;
+      newRow.querySelectorAll(".hour-input").forEach((input) => (input.value = ""));
+      newRow.querySelector(".row-total").textContent = "0";
+
+      bodyEl.appendChild(newRow);
+    });
+
+    // Regel verwijderen
+    bodyEl.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-remove-row")) {
+        const rows = bodyEl.querySelectorAll(".timesheet-row");
+        if (rows.length === 1) {
+          // Laat altijd minimaal één regel staan
+          rows[0].querySelectorAll(".hour-input").forEach((i) => (i.value = ""));
+          rows[0].querySelector(".project-name").value = "";
+          recalcRow(rows[0]);
+        } else {
+          e.target.closest(".timesheet-row").remove();
+        }
+        recalcTotals();
+      }
+    });
+
+    // Weeklabel updaten
+    weekInput.addEventListener("change", () => {
+      if (!weekInput.value) {
+        weekLabel.textContent = "Geen week gekozen";
+        return;
+      }
+      // value-formaat: "2025-W09"
+      const parts = weekInput.value.split("-W");
+      if (parts.length === 2) {
+        const year = parts[0];
+        const week = parts[1];
+        weekLabel.textContent = `Week ${week} • ${year}`;
+      } else {
+        weekLabel.textContent = weekInput.value;
+      }
+    });
+
+    // WhatsApp versturen
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const naam = document.getElementById('naam').value;
-      const datum = document.getElementById('datum').value;
-      const uren = document.getElementById('uren').value;
-      const omschrijving = document.getElementById('omschrijving').value;
+      const name = document.getElementById("employeeName").value.trim();
+      const weekText = weekLabel.textContent || "Onbekend";
 
-      const bericht =
-        '*Urenregistratie*\\n' +
-        'Naam: ' + naam + '\\n' +
-        'Datum: ' + datum + '\\n' +
-        'Uren: ' + uren + '\\n' +
-        'Omschrijving: ' + omschrijving;
+      const rows = bodyEl.querySelectorAll(".timesheet-row");
+      let message = `*Urenregistratie*\n` +
+        `Naam: ${name}\n` +
+        `Week: ${weekText}\n\n`;
 
-      // JOUW nummer in internationaal formaat, bijv. 06-12345678 -> 31612345678
-      const telefoonnummer = '316XXXXXXXX';
+      rows.forEach((row, idx) => {
+        const projectName = row.querySelector(".project-name").value.trim();
+        const projectType = row.querySelector(".project-type").value;
+        const inputs = row.querySelectorAll(".hour-input");
 
-      const url = 'https://wa.me/' + telefoonnummer + '?text=' + encodeURIComponent(bericht);
+        let hasHours = false;
+        const dayLabels = ["Ma", "Di", "Wo", "Do", "Vr", "Za"];
+        const dayValues = [];
+
+        inputs.forEach((input, i) => {
+          const val = parseNumber(input.value || "0");
+          if (val > 0) hasHours = true;
+          dayValues[i] = val;
+        });
+
+        if (!projectName && !hasHours) return; // lege regel overslaan
+
+        message += `*Regel ${idx + 1}:* ${projectName || "-"} (${projectType})\n`;
+        dayValues.forEach((val, i) => {
+          if (val > 0) {
+            message += `${dayLabels[i]}: ${val.toFixed(2).replace(".", ",")} u\n`;
+          }
+        });
+
+        const rowTotal = dayValues.reduce((a, b) => a + b, 0);
+        message += `Totaal: ${rowTotal.toFixed(2).replace(".", ",")} u\n\n`;
+      });
+
+      const weekTotal = weekTotalEl.textContent || "0";
+      message += `*Weektotaal:* ${weekTotal} u`;
+
+      // VERVANG DIT MET JOUW NUMMER (bijv. 06-12345678 -> 31612345678)
+      const telefoonnummer = "31640022684";
+
+      const url = "https://wa.me/" + telefoonnummer + "?text=" + encodeURIComponent(message);
       window.location.href = url;
     });
   </script>
