@@ -19,7 +19,9 @@
       --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.7);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -79,8 +81,12 @@
     }
 
     @media (min-width: 640px) {
-      .card { padding: 22px 24px 28px; }
-      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .card {
+        padding: 22px 24px 28px;
+      }
+      .grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      }
     }
 
     label {
@@ -106,14 +112,6 @@
     input[type="week"]:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 1px var(--accent-soft);
-    }
-
-    input[readonly] { opacity: 0.8; }
-
-    .help-text {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 4px;
     }
 
     .week-display {
@@ -149,7 +147,10 @@
       overflow: hidden;
     }
 
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
     table {
       width: 100%;
@@ -158,16 +159,22 @@
       font-size: 0.84rem;
     }
 
-    thead { background: rgba(15, 23, 42, 0.96); }
+    thead {
+      background: rgba(15, 23, 42, 0.96);
+    }
 
-    th, td {
+    th,
+    td {
       padding: 8px 10px;
       border-bottom: 1px solid rgba(31, 41, 55, 0.8);
       text-align: center;
       white-space: nowrap;
     }
 
-    th:first-child, td:first-child { text-align: left; }
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
 
     thead th {
       font-weight: 600;
@@ -177,8 +184,19 @@
       z-index: 1;
     }
 
-    tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.7); }
-    tbody tr:nth-child(odd)  { background: rgba(15, 23, 42, 0.85); }
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .project-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
     .project-name {
       width: 100%;
@@ -190,7 +208,19 @@
       font-size: 0.82rem;
     }
 
-    .project-name::placeholder { color: #6b7280; }
+    .project-name::placeholder {
+      color: #6b7280;
+    }
+
+    .project-type {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 5px 9px;
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
 
     .hour-input {
       width: 100%;
@@ -205,7 +235,8 @@
     }
 
     .hour-input:focus,
-    .project-name:focus {
+    .project-name:focus,
+    .project-type:focus {
       border-color: var(--accent);
       outline: none;
       box-shadow: 0 0 0 1px var(--accent-soft);
@@ -216,7 +247,9 @@
       font-variant-numeric: tabular-nums;
     }
 
-    tfoot { background: rgba(15, 23, 42, 0.98); }
+    tfoot {
+      background: rgba(15, 23, 42, 0.98);
+    }
 
     tfoot td {
       font-weight: 600;
@@ -295,7 +328,9 @@
       padding: 4px 6px;
     }
 
-    .btn-remove-row:hover { color: var(--danger); }
+    .btn-remove-row:hover {
+      color: var(--danger);
+    }
 
     .footer-row {
       display: flex;
@@ -310,7 +345,9 @@
         align-items: center;
         justify-content: space-between;
       }
-      .btn { width: auto; }
+      .btn {
+        width: auto;
+      }
     }
 
     .summary-text {
@@ -334,34 +371,8 @@
         <div class="grid">
           <div>
             <label for="employeeName">Naam werknemer</label>
-            <input
-              type="text"
-              id="employeeName"
-              list="employeeList"
-              placeholder="Begin met typen en kies je naam"
-              required
-            />
-            <datalist id="employeeList">
-              <!-- VOORBEELDEN – vervang door je eigen medewerkers -->
-              <option value="Jan Jansen"></option>
-              <option value="Piet de Boer"></option>
-              <option value="Karin de Vries"></option>
-            </datalist>
-            <div class="help-text">
-              Kies je naam uit de lijst – je personeelsnummer wordt automatisch ingevuld.
-            </div>
+            <input type="text" id="employeeName" placeholder="Bijv. Jan Jansen" required />
           </div>
-
-          <div>
-            <label for="employeeNumber">Personeelsnummer</label>
-            <input
-              type="text"
-              id="employeeNumber"
-              placeholder="Wordt automatisch ingevuld"
-              readonly
-            />
-          </div>
-
           <div>
             <label for="weekInput">Week</label>
             <input type="week" id="weekInput" required />
@@ -393,12 +404,22 @@
               <tbody id="timesheetBody">
                 <tr class="timesheet-row">
                   <td>
-                    <input
-                      type="text"
-                      class="project-name"
-                      placeholder="Projectnaam, klant of activiteit"
-                      required
-                    />
+                    <div class="project-cell">
+                      <input
+                        type="text"
+                        class="project-name"
+                        placeholder="Projectnaam of klant"
+                        required
+                      />
+                      <select class="project-type">
+                        <option value="Project">Project</option>
+                        <option value="Service">Service / nazorg</option>
+                        <option value="Reistijd">Reistijd</option>
+                        <option value="Vakantie">Vakantie</option>
+                        <option value="Ziek">Ziek</option>
+                        <option value="Overig">Overig</option>
+                      </select>
+                    </div>
                   </td>
                   <td><input type="number" min="0" step="0.25" class="hour-input day-0" /></td>
                   <td><input type="number" min="0" step="0.25" class="hour-input day-1" /></td>
@@ -447,21 +468,11 @@
   </div>
 
   <script>
-    // "Kleine database" met medewerkers
-    // VERVANG DIT DOOR JULLIE EIGEN PERSONEEL
-    const employees = [
-      { name: "Jan Jansen", number: "1001" },
-      { name: "Piet de Boer", number: "1002" },
-      { name: "Karin de Vries", number: "1003" },
-    ];
-
     const bodyEl = document.getElementById("timesheetBody");
     const addRowBtn = document.getElementById("addRowBtn");
     const weekInput = document.getElementById("weekInput");
     const weekLabel = document.getElementById("weekLabel");
     const form = document.getElementById("timesheetForm");
-    const employeeNameInput = document.getElementById("employeeName");
-    const employeeNumberInput = document.getElementById("employeeNumber");
 
     const totalDayEls = [
       document.getElementById("totalDay0"),
@@ -474,7 +485,7 @@
     const weekTotalEl = document.getElementById("weekTotal");
 
     function parseNumber(v) {
-      const n = parseFloat((v || "").toString().replace(",", "."));
+      const n = parseFloat(v.replace(",", "."));
       return isNaN(n) ? 0 : n;
     }
 
@@ -509,7 +520,7 @@
       weekTotalEl.textContent = weekTotal.toFixed(2).replace(".", ",");
     }
 
-    // Input events
+    // Event delegation voor alle inputs
     bodyEl.addEventListener("input", (e) => {
       if (e.target.classList.contains("hour-input")) {
         const row = e.target.closest(".timesheet-row");
@@ -524,6 +535,7 @@
       const newRow = firstRow.cloneNode(true);
 
       newRow.querySelector(".project-name").value = "";
+      newRow.querySelector(".project-type").selectedIndex = 0;
       newRow.querySelectorAll(".hour-input").forEach((input) => (input.value = ""));
       newRow.querySelector(".row-total").textContent = "0";
 
@@ -535,6 +547,7 @@
       if (e.target.classList.contains("btn-remove-row")) {
         const rows = bodyEl.querySelectorAll(".timesheet-row");
         if (rows.length === 1) {
+          // Laat altijd minimaal één regel staan
           rows[0].querySelectorAll(".hour-input").forEach((i) => (i.value = ""));
           rows[0].querySelector(".project-name").value = "";
           recalcRow(rows[0]);
@@ -551,7 +564,8 @@
         weekLabel.textContent = "Geen week gekozen";
         return;
       }
-      const parts = weekInput.value.split("-W"); // "2025-W09"
+      // value-formaat: "2025-W09"
+      const parts = weekInput.value.split("-W");
       if (parts.length === 2) {
         const year = parts[0];
         const week = parts[1];
@@ -561,38 +575,25 @@
       }
     });
 
-    // Personeelsnummer automatisch invullen
-    function updateEmployeeNumber() {
-      const name = employeeNameInput.value.trim().toLowerCase();
-      const match = employees.find((e) => e.name.toLowerCase() === name);
-      employeeNumberInput.value = match ? match.number : "";
-    }
-
-    employeeNameInput.addEventListener("change", updateEmployeeNumber);
-    employeeNameInput.addEventListener("blur", updateEmployeeNumber);
-
     // WhatsApp versturen
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const name = employeeNameInput.value.trim();
-      const empNumber = employeeNumberInput.value || "-";
+      const name = document.getElementById("employeeName").value.trim();
       const weekText = weekLabel.textContent || "Onbekend";
 
       const rows = bodyEl.querySelectorAll(".timesheet-row");
-      let message =
-        `*Urenregistratie*\n` +
+      let message = `*Urenregistratie*\n` +
         `Naam: ${name}\n` +
-        `Personeelsnummer: ${empNumber}\n` +
         `Week: ${weekText}\n\n`;
-
-      const dayLabels = ["Ma", "Di", "Wo", "Do", "Vr", "Za"];
 
       rows.forEach((row, idx) => {
         const projectName = row.querySelector(".project-name").value.trim();
+        const projectType = row.querySelector(".project-type").value;
         const inputs = row.querySelectorAll(".hour-input");
 
         let hasHours = false;
+        const dayLabels = ["Ma", "Di", "Wo", "Do", "Vr", "Za"];
         const dayValues = [];
 
         inputs.forEach((input, i) => {
@@ -603,7 +604,7 @@
 
         if (!projectName && !hasHours) return; // lege regel overslaan
 
-        message += `*Regel ${idx + 1}:* ${projectName || "-"}\n`;
+        message += `*Regel ${idx + 1}:* ${projectName || "-"} (${projectType})\n`;
         dayValues.forEach((val, i) => {
           if (val > 0) {
             message += `${dayLabels[i]}: ${val.toFixed(2).replace(".", ",")} u\n`;
@@ -617,7 +618,7 @@
       const weekTotal = weekTotalEl.textContent || "0";
       message += `*Weektotaal:* ${weekTotal} u`;
 
-      // VERVANG MET JOUW NUMMER (06-12345678 -> 31612345678)
+      // VERVANG DIT MET JOUW NUMMER (bijv. 06-12345678 -> 31612345678)
       const telefoonnummer = "31640022684";
 
       const url = "https://wa.me/" + telefoonnummer + "?text=" + encodeURIComponent(message);
