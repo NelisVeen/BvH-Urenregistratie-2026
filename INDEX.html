@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Uren invoeren</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input, textarea, button { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    button { margin-top: 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Uren invoeren</h1>
+
+  <form id="urenForm">
+    <label>
+      Naam
+      <input type="text" id="naam" required />
+    </label>
+
+    <label>
+      Datum
+      <input type="date" id="datum" required />
+    </label>
+
+    <label>
+      Aantal uren
+      <input type="number" id="uren" step="0.25" required />
+    </label>
+
+    <label>
+      Omschrijving
+      <textarea id="omschrijving" rows="4" required></textarea>
+    </label>
+
+    <button type="submit">Verstuur via WhatsApp</button>
+  </form>
+
+  <script>
+    document.getElementById('urenForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const naam = document.getElementById('naam').value;
+      const datum = document.getElementById('datum').value;
+      const uren = document.getElementById('uren').value;
+      const omschrijving = document.getElementById('omschrijving').value;
+
+      const bericht =
+        '*Urenregistratie*\\n' +
+        'Naam: ' + naam + '\\n' +
+        'Datum: ' + datum + '\\n' +
+        'Uren: ' + uren + '\\n' +
+        'Omschrijving: ' + omschrijving;
+
+      // JOUW nummer in internationaal formaat, bijv. 06-12345678 -> 31612345678
+      const telefoonnummer = '316XXXXXXXX';
+
+      const url = 'https://wa.me/' + telefoonnummer + '?text=' + encodeURIComponent(bericht);
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>
