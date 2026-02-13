@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      --bg:#0f172a;
       --card:#0b1220;
       --card-alt:#020617;
       --accent:#38bdf8;
@@ -47,7 +46,7 @@
       padding:2px 8px;border-radius:999px;border:1px solid rgba(56,189,248,.4);
       white-space:nowrap;
     }
-    .subtitle{font-size:.9rem;color:var(--muted);margin-bottom:14px;line-height:1.35}
+    .subtitle{font-size:.92rem;color:var(--muted);margin-bottom:14px;line-height:1.35}
 
     .grid{
       display:grid;
@@ -59,28 +58,30 @@
       .grid{grid-template-columns:2fr 1fr 1fr}
     }
 
-    label{font-size:.8rem;color:var(--muted);display:block;margin:0 0 6px}
-    input[type="text"], input[type="week"], textarea{
+    label{font-size:.82rem;color:var(--muted);display:block;margin:0 0 6px}
+
+    /* iOS zoom fix: 16px minimum on inputs/textarea */
+    input[type="text"], input[type="week"], input[type="number"], textarea{
       width:100%;
       border-radius:14px;
       border:1px solid var(--border);
       padding:10px 12px;
       background:rgba(15,23,42,.85);
       color:var(--text);
-      font-size:.92rem;
+      font-size:16px;
       outline:none;
     }
-    input[type="text"]:focus, input[type="week"]:focus, textarea:focus{
+    input[type="text"]:focus, input[type="week"]:focus, input[type="number"]:focus, textarea:focus{
       border-color:var(--accent);
       box-shadow:0 0 0 2px var(--accent-soft);
     }
     input[readonly]{opacity:.85}
     textarea{min-height:70px;resize:vertical}
 
-    .row-help{font-size:.78rem;color:var(--muted);margin-top:6px}
+    .row-help{font-size:.8rem;color:var(--muted);margin-top:6px}
     .status{
       margin-top:6px;
-      font-size:.8rem;
+      font-size:.82rem;
       display:flex;
       align-items:center;
       gap:8px;
@@ -97,7 +98,7 @@
       border-radius:999px;padding:6px 10px;
       background:rgba(15,23,42,.9);
       border:1px solid var(--border);
-      font-size:.82rem;color:var(--muted);
+      font-size:.86rem;color:var(--muted);
       width:max-content;
     }
     .pill .pill-dot{width:7px;height:7px;border-radius:999px;background:var(--accent);
@@ -133,11 +134,9 @@
     }
     .dd-item:last-child{border-bottom:none}
     .dd-item:hover{background:rgba(56,189,248,.12)}
-    .dd-name{font-size:.92rem}
-    .dd-num{font-size:.8rem;color:var(--muted);white-space:nowrap}
-    .dd-manual{
-      color:#eab308; /* geel-achtig, zonder extra variabelen */
-    }
+    .dd-name{font-size:16px}
+    .dd-num{font-size:.86rem;color:var(--muted);white-space:nowrap}
+    .dd-manual{color:#eab308}
 
     .timesheet-wrapper{
       margin-top:12px;
@@ -147,7 +146,7 @@
       overflow:hidden;
     }
     .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse;min-width:820px;font-size:.84rem}
+    table{width:100%;border-collapse:collapse;min-width:820px;font-size:.9rem}
     thead{background:rgba(15,23,42,.96)}
     th,td{padding:8px 10px;border-bottom:1px solid rgba(31,41,55,.8);text-align:center;white-space:nowrap}
     th:first-child,td:first-child{text-align:left}
@@ -160,7 +159,7 @@
     .project-code{
       border-radius:999px;border:1px solid rgba(31,41,55,.9);
       padding:7px 10px;background:rgba(15,23,42,.95);color:var(--text);
-      font-size:.85rem;flex:1;
+      font-size:16px;flex:1;
     }
     .project-code::placeholder{color:#6b7280}
     .btn-mini{
@@ -169,7 +168,7 @@
       background:rgba(56,189,248,.12);
       border:1px solid rgba(56,189,248,.35);
       color:var(--accent);
-      font-size:.82rem;
+      font-size:.9rem;
       display:inline-flex;align-items:center;gap:6px;
       white-space:nowrap;
     }
@@ -181,14 +180,16 @@
       width:100%;max-width:74px;
       border-radius:999px;border:1px solid rgba(31,41,55,.9);
       padding:7px 6px;background:rgba(15,23,42,.95);
-      color:var(--text);font-size:.82rem;text-align:center;
+      color:var(--text);
+      font-size:16px;
+      text-align:center;
     }
     .hour-input:focus,.project-code:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 1px var(--accent-soft)}
     .row-total{font-weight:700;font-variant-numeric:tabular-nums}
 
     tfoot{background:rgba(15,23,42,.98)}
     tfoot td{font-weight:700;border-top:1px solid rgba(31,41,55,.9)}
-    tfoot td.label{text-align:right;color:var(--muted);font-size:.82rem}
+    tfoot td.label{text-align:right;color:var(--muted);font-size:.9rem}
 
     .btn-remove-row{
       background:transparent;border:none;color:var(--muted);
@@ -205,7 +206,7 @@
 
     .btn{
       border-radius:999px;border:1px solid transparent;
-      padding:11px 16px;font-size:.95rem;font-weight:650;
+      padding:11px 16px;font-size:1rem;font-weight:650;
       cursor:pointer;display:inline-flex;align-items:center;gap:10px;
       transition:transform .08s ease,box-shadow .08s ease,background .12s ease;
       background:linear-gradient(135deg,#0ea5e9,#22c55e);
@@ -232,7 +233,6 @@
       font-size:14px;
     }
 
-    .summary-text{font-size:.82rem;color:var(--muted);line-height:1.35}
     .sticky-footer{
       position:sticky;
       bottom:0;
@@ -248,7 +248,7 @@
       background:rgba(249,115,115,.12);
       border:1px solid rgba(249,115,115,.35);
       color:#fecaca;
-      font-size:.86rem;
+      font-size:.95rem;
       line-height:1.35;
     }
     .error-box.show{display:block}
@@ -259,30 +259,29 @@
   <div class="card">
     <h1>Urenregistratie <span class="badge">Mobiel</span></h1>
     <div class="subtitle">
-      Type je <b>volledige naam</b>. Zie je jezelf in de dropdown? Klik je naam aan (dan wordt je personeelsnummer automatisch gevuld).
-      <br/>Sta je er niet tussen? Dan mag je je naam handmatig laten staan — dit komt in WhatsApp als “zelf gemaakte naam”.
+      Vul de naam in. Selecteer een naam uit de lijst om het personeelsnummer automatisch te vullen.
+      <br/>Staat de naam niet in de lijst, dan kan de naam handmatig worden ingevoerd. In de export wordt dit vermeld als “zelf gemaakte naam”.
     </div>
 
     <form id="timesheetForm" autocomplete="off">
       <div class="grid">
         <div class="name-wrap">
-          <label for="employeeName">Naam werknemer</label>
-          <input type="text" id="employeeName" placeholder="Bijv. Sjouke van der Bijl" required />
+          <label for="employeeName">Naam</label>
+          <input type="text" id="employeeName" placeholder="Bijv. Jan Jansen" required />
           <div class="dropdown" id="nameDropdown" role="listbox" aria-label="Naam suggesties"></div>
 
-          <div class="row-help">
-            De dropdown filtert automatisch: namen die er totaal niet op lijken verdwijnen.
-          </div>
+          <div class="row-help">De lijst wordt gefilterd op basis van de invoer.</div>
+
           <div class="status" id="nameStatus" aria-live="polite">
             <span class="dot" id="nameDot"></span>
-            <span id="nameStatusText">Nog geen naam gecontroleerd</span>
+            <span id="nameStatusText">Geen selectie</span>
           </div>
         </div>
 
         <div>
           <label for="employeeNumber">Personeelsnummer</label>
-          <input type="text" id="employeeNumber" placeholder="Wordt automatisch ingevuld" readonly />
-          <div class="row-help">Niet zelf invullen.</div>
+          <input type="text" id="employeeNumber" placeholder="Automatisch" readonly />
+          <div class="row-help">Wordt automatisch gevuld bij selectie.</div>
         </div>
 
         <div>
@@ -300,7 +299,7 @@
           <table id="timesheetTable">
             <thead>
               <tr>
-                <th>Projectcode (+ optioneel omschrijving)</th>
+                <th>Projectcode en omschrijving</th>
                 <th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Za</th>
                 <th>Totaal</th>
                 <th></th>
@@ -312,11 +311,11 @@
                   <div class="project-wrap">
                     <div class="project-rowline">
                       <input type="text" class="project-code" placeholder="Bijv. P022203" required />
-                      <button type="button" class="btn-mini btn-toggle-desc" title="Omschrijving toevoegen">
+                      <button type="button" class="btn-mini btn-toggle-desc" title="Omschrijving tonen/verbergen">
                         <span>＋</span> Omschrijving
                       </button>
                     </div>
-                    <textarea class="desc" placeholder="Optioneel: bijv. ‘Was daar met Jannie en Bert…’"></textarea>
+                    <textarea class="desc" placeholder="Optioneel: toelichting (bijv. ‘Werkzaamheden uitgevoerd met Jan en Kees’)."></textarea>
                   </div>
                 </td>
                 <td><input type="number" min="0" step="0.25" class="hour-input day-0" /></td>
@@ -345,18 +344,15 @@
       <div class="actions-bar">
         <button type="button" id="addRowBtn" class="btn btn-secondary">
           <span class="btn-icon">＋</span>
-          Nieuwe regel toevoegen
+          Regel toevoegen
         </button>
-        <div class="summary-text">
-          In WhatsApp export staan de <b>echte datums</b> (ma–za) bij de uren + eventuele omschrijving.
-        </div>
       </div>
 
       <div class="error-box" id="errorBox"></div>
 
       <div class="sticky-footer">
         <button type="submit" class="btn">
-          <span>Verstuur timesheet via WhatsApp</span>
+          <span>Versturen via WhatsApp</span>
         </button>
       </div>
     </form>
@@ -414,10 +410,8 @@
   const employeeNumberInput = document.getElementById("employeeNumber");
   const errorBox = document.getElementById("errorBox");
   const nameDropdown = document.getElementById("nameDropdown");
-
   const nameDot = document.getElementById("nameDot");
   const nameStatusText = document.getElementById("nameStatusText");
-
   const totalDayEls = [
     document.getElementById("totalDay0"),
     document.getElementById("totalDay1"),
@@ -514,7 +508,6 @@
   }
 
   function parseWeekInput(value) {
-    // "2026-W06"
     const parts = (value || "").split("-W");
     if (parts.length !== 2) return null;
     const year = parseInt(parts[0], 10);
@@ -524,7 +517,6 @@
   }
 
   function isValidWeekValue(v){
-    // type="week" accepteert YYYY-Www
     return /^\d{4}-W\d{2}$/.test(v || "");
   }
 
@@ -537,7 +529,6 @@
     }
     const monday = isoWeekMonday(wk.year, wk.week);
     const saturday = new Date(monday); saturday.setDate(monday.getDate() + 5);
-
     const ww = String(wk.week).padStart(2, "0");
     weekLabel.textContent = `Week ${ww} • ${wk.year}`;
     weekRangeText.textContent = `${formatDate(monday)} t/m ${formatDate(saturday)}`;
@@ -573,7 +564,7 @@
       return { ...e, score, tokenHit };
     });
 
-    // Streng filteren (alles wat er echt niet op lijkt verdwijnt)
+    // Streng filteren
     const base = q.length < 6 ? 0.70 : 0.62;
 
     const filtered = scored
@@ -582,7 +573,7 @@
       .slice(0, 8)
       .map(x => ({ number: x.number, name: x.name, manual: false }));
 
-    // Altijd optie voor handmatig (dus geen “losse dienst” / aparte optie nodig)
+    // Altijd handmatige optie toevoegen
     const pretty = query.trim();
     if (pretty.length >= 2) {
       filtered.push({
@@ -601,21 +592,20 @@
     if (exact) {
       employeeNameInput.value = exact.name;
       employeeNumberInput.value = exact.number;
-      setNameStatus("ok", `Herkenning OK • #${exact.number}`);
+      setNameStatus("ok", `Geselecteerd • #${exact.number}`);
       return { matched: true, employee: exact };
     }
     employeeNumberInput.value = "";
-    setNameStatus("", "Niet in lijst • wordt als ‘zelf gemaakte naam’ meegestuurd in WhatsApp");
+    setNameStatus("", "Handmatige invoer • wordt als ‘zelf gemaakte naam’ gemarkeerd");
     return { matched: false };
   }
 
   employeeNameInput.addEventListener("input", () => {
-    const raw = employeeNameInput.value;
-    const q = raw.trim();
+    const q = employeeNameInput.value.trim();
 
     if (!q) {
       employeeNumberInput.value = "";
-      setNameStatus("", "Nog geen naam gecontroleerd");
+      setNameStatus("", "Geen selectie");
       hideDropdown();
       return;
     }
@@ -623,19 +613,17 @@
     const matches = filterEmployees(q);
     showDropdown(matches);
 
-    // Exact match? Dan direct nummer vullen.
     const exact = employees.find(e => normalize(e.name) === normalize(q));
     if (exact) {
       employeeNumberInput.value = exact.number;
-      setNameStatus("ok", `Herkenning OK • #${exact.number}`);
+      setNameStatus("ok", `Geselecteerd • #${exact.number}`);
     } else {
       employeeNumberInput.value = "";
-      setNameStatus("", "Kies je naam uit de dropdown, of laat staan als ‘zelf gemaakte naam’");
+      setNameStatus("", "Selecteer uit de lijst of gebruik handmatige invoer");
     }
   });
 
   employeeNameInput.addEventListener("blur", () => {
-    // Delay zodat click op dropdown nog werkt
     setTimeout(() => {
       const q = employeeNameInput.value.trim();
       if (!q) { hideDropdown(); return; }
@@ -647,8 +635,7 @@
   employeeNameInput.addEventListener("focus", () => {
     const q = employeeNameInput.value.trim();
     if (!q) return;
-    const matches = filterEmployees(q);
-    showDropdown(matches);
+    showDropdown(filterEmployees(q));
   });
 
   nameDropdown.addEventListener("mousedown", (e) => {
@@ -660,19 +647,18 @@
     const num = item.getAttribute("data-num");
 
     if (isManual) {
-      // "Gebruik: <naam>" -> we halen alleen het stukje na "Gebruik:"
       const chosen = name.replace(/^Gebruik:\s*/i, "").trim();
       employeeNameInput.value = chosen;
       employeeNumberInput.value = "";
-      setNameStatus("", "Zelf gemaakte naam geselecteerd • komt zo in WhatsApp");
+      setNameStatus("", "Handmatige invoer geselecteerd");
     } else {
       employeeNameInput.value = name;
       employeeNumberInput.value = num;
-      setNameStatus("ok", `Herkenning OK • #${num}`);
+      setNameStatus("ok", `Geselecteerd • #${num}`);
     }
 
     hideDropdown();
-    employeeNameInput.blur(); // fijn op mobiel
+    employeeNameInput.blur();
   });
 
   document.addEventListener("click", (e) => {
@@ -779,9 +765,6 @@
   (function initWeekDefault(){
     const params = new URLSearchParams(window.location.search);
 
-    // Ondersteuning:
-    // ?week=2026-W06  (aanrader)
-    // of ?jaar=2026&weeknr=6
     const weekParam = (params.get("week") || params.get("w") || "").trim();
     const jaarParam = (params.get("jaar") || "").trim();
     const weeknrParam = (params.get("weeknr") || "").trim();
@@ -815,14 +798,14 @@
 
     const name = employeeNameInput.value.trim();
     if (!name) {
-      showError("Vul je naam in.");
+      showError("Naam is verplicht.");
       employeeNameInput.focus();
       return;
     }
 
     const wk = parseWeekInput(weekInput.value);
     if (!wk) {
-      showError("Kies eerst een week.");
+      showError("Week is verplicht.");
       weekInput.focus();
       return;
     }
@@ -843,7 +826,7 @@
     let message =
       `*Urenregistratie*\n` +
       `Naam: ${match ? match.name : name}${isManual ? " (zelf gemaakte naam)" : ""}\n` +
-      (empNumber ? `Personeelsnummer: ${empNumber}\n` : `Personeelsnummer: -\n`) +
+      `Personeelsnummer: ${empNumber || "-"}\n` +
       `Week: ${weekLabel.textContent}\n` +
       `Periode: ${formatDate(dates[0])} t/m ${formatDate(dates[5])}\n\n`;
 
@@ -865,11 +848,11 @@
         dayValues[i] = val;
       });
 
-      // Skip fully empty row
+      // Skip empty row
       if (!project && !hasHours && !desc) continue;
 
       if (!project) {
-        showError("Vul bij elke ingevulde regel een projectcode in (bijv. P022203).");
+        showError("Projectcode is verplicht bij een ingevulde regel.");
         row.querySelector(".project-code").focus();
         return;
       }
@@ -890,7 +873,7 @@
     }
 
     if (!hasAnyLine) {
-      showError("Vul minimaal één regel in (projectcode en/of uren).");
+      showError("Vul minimaal één regel in.");
       return;
     }
 
@@ -903,7 +886,7 @@
   });
 
   // Initial status
-  setNameStatus("", "Nog geen naam gecontroleerd");
+  setNameStatus("", "Geen selectie");
 </script>
 </body>
 </html>
