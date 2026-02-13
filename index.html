@@ -193,15 +193,19 @@
       overflow:hidden;
     }
 
+    /* Watermark IN timesheet, altijd gecentreerd */
     .timesheet-watermark{
-      opacity: .14; /* probeer .10 - .20 */
-      filter:
-        brightness(1.35)
-        contrast(1.15)
-        saturate(1.05)
-        drop-shadow(0 20px 40px rgba(0,0,0,.35));
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%) rotate(-6deg);
+      width:min(520px,85%);
+      opacity:.07;
+      pointer-events:none;
+      user-select:none;
+      filter: drop-shadow(0 20px 40px rgba(0,0,0,.35));
+      z-index:0;
     }
-
 
     .table-scroll{
       position:relative;
