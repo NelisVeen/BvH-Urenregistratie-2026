@@ -104,17 +104,37 @@
       box-shadow:0 0 0 4px rgba(56,189,248,.25);
     }
 
-    .segmented{
-      display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px
+    /* Custom dropdown for names */
+    .name-wrap{position:relative}
+    .dropdown{
+      position:absolute;
+      left:0; right:0;
+      top:100%;
+      margin-top:6px;
+      background:rgba(2,6,23,.98);
+      border:1px solid rgba(56,189,248,.25);
+      border-radius:14px;
+      box-shadow:0 18px 45px rgba(0,0,0,.45);
+      overflow:hidden;
+      display:none;
+      z-index:20;
+      max-height:280px;
+      overflow-y:auto;
     }
-    .segmented label{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 10px;border:1px solid var(--border);border-radius:999px;
-      background:rgba(15,23,42,.65);cursor:pointer;margin:0;
-      font-size:.85rem;color:var(--text);
+    .dropdown.show{display:block}
+    .dd-item{
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      border-bottom:1px solid rgba(31,41,55,.7);
     }
-    .segmented input{accent-color:var(--accent)}
-    .segmented .hint{color:var(--muted);font-size:.78rem}
+    .dd-item:last-child{border-bottom:none}
+    .dd-item:hover{background:rgba(56,189,248,.12)}
+    .dd-name{font-size:.92rem}
+    .dd-num{font-size:.8rem;color:var(--muted);white-space:nowrap}
 
     .timesheet-wrapper{
       margin-top:12px;
@@ -124,7 +144,7 @@
       overflow:hidden;
     }
     .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse;min-width:780px;font-size:.84rem}
+    table{width:100%;border-collapse:collapse;min-width:820px;font-size:.84rem}
     thead{background:rgba(15,23,42,.96)}
     th,td{padding:8px 10px;border-bottom:1px solid rgba(31,41,55,.8);text-align:center;white-space:nowrap}
     th:first-child,td:first-child{text-align:left}
@@ -132,7 +152,7 @@
     tbody tr:nth-child(even){background:rgba(15,23,42,.7)}
     tbody tr:nth-child(odd){background:rgba(15,23,42,.85)}
 
-    .project-wrap{display:flex;flex-direction:column;gap:8px;min-width:260px}
+    .project-wrap{display:flex;flex-direction:column;gap:8px;min-width:290px}
     .project-rowline{display:flex;gap:8px;align-items:center}
     .project-code{
       border-radius:999px;border:1px solid rgba(31,41,55,.9);
@@ -196,7 +216,7 @@
       color:var(--text);
       border:1px solid rgba(55,65,81,.9);
       box-shadow:none;
-      font-weight:600;
+      font-weight:650;
       width:100%;
       justify-content:center;
     }
@@ -236,22 +256,19 @@
   <div class="card">
     <h1>Urenregistratie <span class="badge">Mobiel</span></h1>
     <div class="subtitle">
-      Vul je <b>naam</b> in (volledig) en kies een week. Personeelsnummer wordt automatisch ingevuld.
-      <br/>Voor <b>losse dienst</b> kies je “Losse dienst”.
+      Type je <b>volledige naam</b>. Zie je jezelf in de dropdown? Klik je naam aan (dan wordt je personeelsnummer automatisch gevuld).
+      <br/>Sta je er niet tussen? Dan mag je je naam handmatig laten staan — dit komt in WhatsApp als “handmatig ingevoerd”.
     </div>
 
     <form id="timesheetForm" autocomplete="off">
-      <div class="segmented" role="group" aria-label="Type medewerker">
-        <label><input type="radio" name="workerType" value="employee" checked> In dienst <span class="hint">(naam moet matchen)</span></label>
-        <label><input type="radio" name="workerType" value="temp"> Losse dienst <span class="hint">(algemene code)</span></label>
-      </div>
-
       <div class="grid">
-        <div>
+        <div class="name-wrap">
           <label for="employeeName">Naam werknemer</label>
-          <input type="text" id="employeeName" placeholder="Type je volledige naam" required />
+          <input type="text" id="employeeName" placeholder="Bijv. Sjouke van der Bijl" required />
+          <div class="dropdown" id="nameDropdown" role="listbox" aria-label="Naam suggesties"></div>
+
           <div class="row-help">
-            Tip: type volledig (bijv. “Sjouke van der Bijl”). Kleine typefouten worden automatisch herkend.
+            De dropdown filtert automatisch: namen die er totaal niet op lijken verdwijnen.
           </div>
           <div class="status" id="nameStatus" aria-live="polite">
             <span class="dot" id="nameDot"></span>
@@ -271,6 +288,7 @@
           <div style="margin-top:8px">
             <span class="pill"><span class="pill-dot"></span><span id="weekLabel">Geen week gekozen</span></span>
           </div>
+          <div class="row-help" id="weekRangeText"></div>
         </div>
       </div>
 
@@ -327,7 +345,7 @@
           Nieuwe regel toevoegen
         </button>
         <div class="summary-text">
-          Totalen worden automatisch bijgewerkt. Versturen opent WhatsApp met een overzichtelijk bericht.
+          In WhatsApp export staan de <b>echte datums</b> (ma–za) bij de uren + eventuele omschrijving.
         </div>
       </div>
 
@@ -344,7 +362,6 @@
 
 <script>
   // === Medewerkerslijst (naam + personeelsnummer) ===
-  // Overgenomen uit jouw screenshot.
   const employees = [
     { number: "4001", name: "Bert van Horssen" },
     { number: "4002", name: "Hans van Horssen" },
@@ -383,19 +400,17 @@
     { number: "4105", name: "Marius Lingurar" },
   ];
 
-  // Algemene code voor losse dienst (pas aan als je wilt)
-  const TEMP_WORKER_CODE = "LD"; // of "9999"
-
   // === DOM refs ===
   const bodyEl = document.getElementById("timesheetBody");
   const addRowBtn = document.getElementById("addRowBtn");
   const weekInput = document.getElementById("weekInput");
   const weekLabel = document.getElementById("weekLabel");
+  const weekRangeText = document.getElementById("weekRangeText");
   const form = document.getElementById("timesheetForm");
   const employeeNameInput = document.getElementById("employeeName");
   const employeeNumberInput = document.getElementById("employeeNumber");
-  const workerTypeRadios = document.querySelectorAll('input[name="workerType"]');
   const errorBox = document.getElementById("errorBox");
+  const nameDropdown = document.getElementById("nameDropdown");
 
   const nameDot = document.getElementById("nameDot");
   const nameStatusText = document.getElementById("nameStatusText");
@@ -411,10 +426,6 @@
   const weekTotalEl = document.getElementById("weekTotal");
 
   // === Helpers ===
-  function getWorkerType() {
-    return Array.from(workerTypeRadios).find(r => r.checked)?.value || "employee";
-  }
-
   function normalize(s) {
     return (s || "")
       .toString()
@@ -425,7 +436,6 @@
       .normalize("NFD").replace(/\p{Diacritic}/gu, "");
   }
 
-  // Simple Levenshtein distance (good enough for small list)
   function levenshtein(a, b) {
     a = normalize(a); b = normalize(b);
     const m = a.length, n = b.length;
@@ -454,19 +464,6 @@
     return 1 - (dist / maxLen);
   }
 
-  function titleCaseName(name) {
-    // Keep hyphens and particles reasonably
-    return name.split(" ").map(part => {
-      if (!part) return part;
-      // keep common particles lowercase unless first word
-      const lower = part.toLowerCase();
-      const particles = ["van", "der", "de", "den", "te", "ten", "ter", "op", "aan", "in", "’t"];
-      if (particles.includes(lower)) return lower;
-      // Hyphenated
-      return part.split("-").map(p => p ? (p[0].toUpperCase() + p.slice(1).toLowerCase()) : p).join("-");
-    }).join(" ");
-  }
-
   function setNameStatus(type, text) {
     nameDot.classList.remove("ok","bad");
     if (type === "ok") nameDot.classList.add("ok");
@@ -486,76 +483,174 @@
     errorBox.classList.remove("show");
   }
 
-  // === Name matching logic ===
-  function findBestEmployeeMatch(inputName) {
-    const raw = (inputName || "").trim();
-    if (!raw) return null;
-
-    // Exact normalize match first
-    const n = normalize(raw);
-    const exact = employees.find(e => normalize(e.name) === n);
-    if (exact) return { employee: exact, score: 1 };
-
-    // Fuzzy: pick best similarity
-    let best = null;
-    for (const e of employees) {
-      const score = similarityScore(raw, e.name);
-      if (!best || score > best.score) best = { employee: e, score };
-    }
-
-    // Threshold: require fairly close match + enough length
-    // (helps stop “Bert” mapping to someone wrong)
-    const minLen = 8;
-    const threshold = 0.78; // tweak if needed
-    if (raw.length < minLen) return null;
-    if (best && best.score >= threshold) return best;
-    return null;
+  function formatDate(d) {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
   }
 
-  function validateAndApplyName() {
-    clearError();
-    const type = getWorkerType();
-    const name = employeeNameInput.value.trim();
+  // ISO week helpers
+  function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return { year: d.getUTCFullYear(), week: weekNo };
+  }
 
-    if (!name) {
+  function isoWeekMonday(year, week) {
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7; // 1..7
+    const mondayWeek1 = new Date(jan4);
+    mondayWeek1.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
+    const monday = new Date(mondayWeek1);
+    monday.setUTCDate(mondayWeek1.getUTCDate() + (week - 1) * 7);
+    // return as local date (still correct day)
+    return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+  }
+
+  function parseWeekInput(value) {
+    // "2026-W06"
+    const parts = (value || "").split("-W");
+    if (parts.length !== 2) return null;
+    const year = parseInt(parts[0], 10);
+    const week = parseInt(parts[1], 10);
+    if (!year || !week) return null;
+    return { year, week };
+  }
+
+  function updateWeekLabels() {
+    const wk = parseWeekInput(weekInput.value);
+    if (!wk) {
+      weekLabel.textContent = "Geen week gekozen";
+      weekRangeText.textContent = "";
+      return;
+    }
+    const monday = isoWeekMonday(wk.year, wk.week);
+    const saturday = new Date(monday); saturday.setDate(monday.getDate() + 5);
+
+    const ww = String(wk.week).padStart(2, "0");
+    weekLabel.textContent = `Week ${ww} • ${wk.year}`;
+    weekRangeText.textContent = `${formatDate(monday)} t/m ${formatDate(saturday)}`;
+  }
+
+  // === Name dropdown logic ===
+  function hideDropdown() {
+    nameDropdown.classList.remove("show");
+    nameDropdown.innerHTML = "";
+  }
+
+  function showDropdown(items) {
+    if (!items.length) { hideDropdown(); return; }
+    nameDropdown.innerHTML = items.map(it => `
+      <div class="dd-item" data-num="${it.number}" data-name="${it.name}">
+        <div class="dd-name">${it.name}</div>
+        <div class="dd-num">#${it.number}</div>
+      </div>
+    `).join("");
+    nameDropdown.classList.add("show");
+  }
+
+  function filterEmployees(query) {
+    const q = normalize(query);
+    if (!q) return [];
+
+    // Strict filtering: remove anything that "doesn't resemble"
+    // 1) Token contains match OR
+    // 2) Similarity above threshold
+    const tokens = q.split(" ").filter(Boolean);
+
+    const scored = employees.map(e => {
+      const en = normalize(e.name);
+      const tokenHit = tokens.some(t => en.includes(t));
+      const score = similarityScore(q, e.name);
+      return { ...e, score, tokenHit };
+    });
+
+    // Dynamic threshold (short queries stricter)
+    const base = q.length < 6 ? 0.70 : 0.62;
+
+    const filtered = scored
+      .filter(x => x.tokenHit || x.score >= base)
+      .sort((a,b) => (b.tokenHit - a.tokenHit) || (b.score - a.score))
+      .slice(0, 8)
+      .map(x => ({ number: x.number, name: x.name }));
+
+    return filtered;
+  }
+
+  function applyEmployeeByName(name) {
+    const n = normalize(name);
+    const exact = employees.find(e => normalize(e.name) === n);
+    if (exact) {
+      employeeNameInput.value = exact.name;
+      employeeNumberInput.value = exact.number;
+      setNameStatus("ok", `Herkenning OK • #${exact.number}`);
+      return { matched: true, employee: exact };
+    }
+    employeeNumberInput.value = "";
+    setNameStatus("", "Naam handmatig (niet in lijst) • komt als ‘handmatig ingevoerd’ in WhatsApp");
+    return { matched: false };
+  }
+
+  employeeNameInput.addEventListener("input", () => {
+    const q = employeeNameInput.value.trim();
+
+    if (!q) {
       employeeNumberInput.value = "";
       setNameStatus("", "Nog geen naam gecontroleerd");
-      return { ok: false };
+      hideDropdown();
+      return;
     }
 
-    if (type === "temp") {
-      // Losse dienst: allow free name, set code
-      employeeNameInput.value = titleCaseName(name);
-      employeeNumberInput.value = TEMP_WORKER_CODE;
-      setNameStatus("ok", `Losse dienst • code: ${TEMP_WORKER_CODE}`);
-      return { ok: true, mode: "temp", canonicalName: employeeNameInput.value, number: TEMP_WORKER_CODE };
-    }
+    const matches = filterEmployees(q);
+    showDropdown(matches);
 
-    // Employee: must match list (fuzzy allowed)
-    const match = findBestEmployeeMatch(name);
-    if (!match) {
+    // If user typed exact existing name, auto-fill number
+    const exact = employees.find(e => normalize(e.name) === normalize(q));
+    if (exact) {
+      employeeNumberInput.value = exact.number;
+      setNameStatus("ok", `Herkenning OK • #${exact.number}`);
+    } else {
       employeeNumberInput.value = "";
-      setNameStatus("bad", "Naam niet herkend. Typ je volledige naam (zoals in de lijst).");
-      return { ok: false };
+      setNameStatus("", "Kies je naam uit de dropdown, of laat staan als handmatig ingevoerd");
     }
-
-    // Apply canonical casing + number
-    employeeNameInput.value = match.employee.name; // already canonical from list
-    employeeNumberInput.value = match.employee.number;
-    setNameStatus("ok", `Herkenning OK • #${match.employee.number}`);
-    return { ok: true, mode: "employee", canonicalName: match.employee.name, number: match.employee.number };
-  }
-
-  // Switch worker type behavior
-  workerTypeRadios.forEach(r => {
-    r.addEventListener("change", () => {
-      employeeNumberInput.value = "";
-      validateAndApplyName();
-    });
   });
 
-  employeeNameInput.addEventListener("blur", validateAndApplyName);
-  employeeNameInput.addEventListener("change", validateAndApplyName);
+  employeeNameInput.addEventListener("blur", () => {
+    // Delay so click on dropdown registers
+    setTimeout(() => {
+      const q = employeeNameInput.value.trim();
+      if (!q) { hideDropdown(); return; }
+      applyEmployeeByName(q);
+      hideDropdown();
+    }, 120);
+  });
+
+  employeeNameInput.addEventListener("focus", () => {
+    const q = employeeNameInput.value.trim();
+    const matches = filterEmployees(q);
+    showDropdown(matches);
+  });
+
+  nameDropdown.addEventListener("mousedown", (e) => {
+    const item = e.target.closest(".dd-item");
+    if (!item) return;
+    const name = item.getAttribute("data-name");
+    const num = item.getAttribute("data-num");
+    employeeNameInput.value = name;
+    employeeNumberInput.value = num;
+    setNameStatus("ok", `Herkenning OK • #${num}`);
+    hideDropdown();
+    // keep focus nice on mobile
+    employeeNameInput.blur();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".name-wrap")) hideDropdown();
+  });
 
   // === Hours math ===
   function parseNumber(v) {
@@ -629,7 +724,6 @@
     bodyEl.appendChild(newRow);
     recalcTotals();
 
-    // Nice: focus new row project code on mobile
     setTimeout(() => newRow.querySelector(".project-code").focus(), 50);
   });
 
@@ -651,54 +745,62 @@
     }
   });
 
-  // Week label
-  weekInput.addEventListener("change", () => {
-    if (!weekInput.value) { weekLabel.textContent = "Geen week gekozen"; return; }
-    const parts = weekInput.value.split("-W");
-    if (parts.length === 2) {
-      const year = parts[0];
-      const week = parts[1];
-      weekLabel.textContent = `Week ${week} • ${year}`;
-    } else {
-      weekLabel.textContent = weekInput.value;
-    }
-  });
+  // Week change
+  weekInput.addEventListener("change", updateWeekLabels);
 
-  // Submit -> WhatsApp
+  // Default week on open = current ISO week
+  (function initWeekDefault(){
+    const now = new Date();
+    const { year, week } = getISOWeek(now);
+    const ww = String(week).padStart(2, "0");
+    weekInput.value = `${year}-W${ww}`;
+    updateWeekLabels();
+  })();
+
+  // Submit -> WhatsApp export with real dates
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     clearError();
 
-    const nameCheck = validateAndApplyName();
-    if (!nameCheck.ok) {
-      showError("Naam is niet herkend. Typ je volledige naam (zoals in de lijst) of kies ‘Losse dienst’.");
+    const name = employeeNameInput.value.trim();
+    if (!name) {
+      showError("Vul je naam in.");
       employeeNameInput.focus();
       return;
     }
 
-    const weekText = weekLabel.textContent || "Onbekend";
-    if (!weekInput.value) {
+    const wk = parseWeekInput(weekInput.value);
+    if (!wk) {
       showError("Kies eerst een week.");
       weekInput.focus();
       return;
     }
 
-    const rows = bodyEl.querySelectorAll(".timesheet-row");
+    const monday = isoWeekMonday(wk.year, wk.week);
+    const dates = Array.from({length: 6}, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
 
-    // Build message
-    const name = employeeNameInput.value.trim();
-    const empNumber = employeeNumberInput.value || "-";
+    const match = employees.find(e => normalize(e.name) === normalize(name));
+    const isManual = !match;
+    const empNumber = match ? match.number : "";
+
+    const rows = bodyEl.querySelectorAll(".timesheet-row");
 
     let message =
       `*Urenregistratie*\n` +
-      `Naam: ${name}\n` +
-      `Personeelsnummer: ${empNumber}\n` +
-      `Week: ${weekText}\n\n`;
+      `Naam: ${match ? match.name : name}${isManual ? " (handmatig ingevoerd)" : ""}\n` +
+      (empNumber ? `Personeelsnummer: ${empNumber}\n` : `Personeelsnummer: -\n`) +
+      `Week: ${weekLabel.textContent}\n` +
+      `Periode: ${formatDate(dates[0])} t/m ${formatDate(dates[5])}\n\n`;
 
     const dayLabels = ["Ma", "Di", "Wo", "Do", "Vr", "Za"];
     let hasAnyLine = false;
 
-    rows.forEach((row, idx) => {
+    for (let idx = 0; idx < rows.length; idx++) {
+      const row = rows[idx];
       const project = row.querySelector(".project-code").value.trim();
       const desc = row.querySelector(".desc").value.trim();
       const inputs = row.querySelectorAll(".hour-input");
@@ -712,14 +814,13 @@
         dayValues[i] = val;
       });
 
-      // Skip completely empty
-      if (!project && !hasHours && !desc) return;
+      // Skip fully empty row
+      if (!project && !hasHours && !desc) continue;
 
       if (!project) {
-        // Force project if they filled hours/desc
         showError("Vul bij elke ingevulde regel een projectcode in (bijv. P022203).");
         row.querySelector(".project-code").focus();
-        throw new Error("Project missing");
+        return;
       }
 
       hasAnyLine = true;
@@ -729,13 +830,13 @@
 
       dayValues.forEach((val, i) => {
         if (val > 0) {
-          message += `${dayLabels[i]}: ${val.toFixed(2).replace(".", ",")} u\n`;
+          message += `${dayLabels[i]} ${formatDate(dates[i])}: ${val.toFixed(2).replace(".", ",")} u\n`;
         }
       });
 
       const rowTotal = dayValues.reduce((a, b) => a + b, 0);
       message += `Totaal: ${rowTotal.toFixed(2).replace(".", ",")} u\n\n`;
-    });
+    }
 
     if (!hasAnyLine) {
       showError("Vul minimaal één regel in (projectcode en/of uren).");
@@ -744,16 +845,14 @@
 
     message += `*Weektotaal:* ${weekTotalEl.textContent || "0"} u`;
 
-    // WhatsApp number (E164 without +). Pas dit nummer aan.
+    // WhatsApp number (E164 without +). Pas aan.
     const telefoonnummer = "31640022684";
-
     const url = "https://wa.me/" + telefoonnummer + "?text=" + encodeURIComponent(message);
     window.location.href = url;
   });
 
-  // Initial state
+  // Initial status
   setNameStatus("", "Nog geen naam gecontroleerd");
 </script>
 </body>
 </html>
-
