@@ -135,6 +135,9 @@
     .dd-item:hover{background:rgba(56,189,248,.12)}
     .dd-name{font-size:.92rem}
     .dd-num{font-size:.8rem;color:var(--muted);white-space:nowrap}
+    .dd-manual{
+      color:#eab308; /* geel-achtig, zonder extra variabelen */
+    }
 
     .timesheet-wrapper{
       margin-top:12px;
@@ -257,7 +260,7 @@
     <h1>Urenregistratie <span class="badge">Mobiel</span></h1>
     <div class="subtitle">
       Type je <b>volledige naam</b>. Zie je jezelf in de dropdown? Klik je naam aan (dan wordt je personeelsnummer automatisch gevuld).
-      <br/>Sta je er niet tussen? Dan mag je je naam handmatig laten staan — dit komt in WhatsApp als “handmatig ingevoerd”.
+      <br/>Sta je er niet tussen? Dan mag je je naam handmatig laten staan — dit komt in WhatsApp als “zelf gemaakte naam”.
     </div>
 
     <form id="timesheetForm" autocomplete="off">
@@ -507,7 +510,6 @@
     mondayWeek1.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
     const monday = new Date(mondayWeek1);
     monday.setUTCDate(mondayWeek1.getUTCDate() + (week - 1) * 7);
-    // return as local date (still correct day)
     return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
   }
 
@@ -519,6 +521,11 @@
     const week = parseInt(parts[1], 10);
     if (!year || !week) return null;
     return { year, week };
+  }
+
+  function isValidWeekValue(v){
+    // type="week" accepteert YYYY-Www
+    return /^\d{4}-W\d{2}$/.test(v || "");
   }
 
   function updateWeekLabels() {
@@ -545,9 +552,9 @@
   function showDropdown(items) {
     if (!items.length) { hideDropdown(); return; }
     nameDropdown.innerHTML = items.map(it => `
-      <div class="dd-item" data-num="${it.number}" data-name="${it.name}">
-        <div class="dd-name">${it.name}</div>
-        <div class="dd-num">#${it.number}</div>
+      <div class="dd-item" data-num="${it.number || ""}" data-name="${it.name}" data-manual="${it.manual ? "1" : "0"}">
+        <div class="dd-name ${it.manual ? "dd-manual" : ""}">${it.name}</div>
+        <div class="dd-num">${it.manual ? "Zelf gemaakte naam" : ("#" + it.number)}</div>
       </div>
     `).join("");
     nameDropdown.classList.add("show");
@@ -557,9 +564,6 @@
     const q = normalize(query);
     if (!q) return [];
 
-    // Strict filtering: remove anything that "doesn't resemble"
-    // 1) Token contains match OR
-    // 2) Similarity above threshold
     const tokens = q.split(" ").filter(Boolean);
 
     const scored = employees.map(e => {
@@ -569,14 +573,24 @@
       return { ...e, score, tokenHit };
     });
 
-    // Dynamic threshold (short queries stricter)
+    // Streng filteren (alles wat er echt niet op lijkt verdwijnt)
     const base = q.length < 6 ? 0.70 : 0.62;
 
     const filtered = scored
       .filter(x => x.tokenHit || x.score >= base)
       .sort((a,b) => (b.tokenHit - a.tokenHit) || (b.score - a.score))
       .slice(0, 8)
-      .map(x => ({ number: x.number, name: x.name }));
+      .map(x => ({ number: x.number, name: x.name, manual: false }));
+
+    // Altijd optie voor handmatig (dus geen “losse dienst” / aparte optie nodig)
+    const pretty = query.trim();
+    if (pretty.length >= 2) {
+      filtered.push({
+        number: "",
+        name: `Gebruik: ${pretty}`,
+        manual: true
+      });
+    }
 
     return filtered;
   }
@@ -591,12 +605,13 @@
       return { matched: true, employee: exact };
     }
     employeeNumberInput.value = "";
-    setNameStatus("", "Naam handmatig (niet in lijst) • komt als ‘handmatig ingevoerd’ in WhatsApp");
+    setNameStatus("", "Niet in lijst • wordt als ‘zelf gemaakte naam’ meegestuurd in WhatsApp");
     return { matched: false };
   }
 
   employeeNameInput.addEventListener("input", () => {
-    const q = employeeNameInput.value.trim();
+    const raw = employeeNameInput.value;
+    const q = raw.trim();
 
     if (!q) {
       employeeNumberInput.value = "";
@@ -608,19 +623,19 @@
     const matches = filterEmployees(q);
     showDropdown(matches);
 
-    // If user typed exact existing name, auto-fill number
+    // Exact match? Dan direct nummer vullen.
     const exact = employees.find(e => normalize(e.name) === normalize(q));
     if (exact) {
       employeeNumberInput.value = exact.number;
       setNameStatus("ok", `Herkenning OK • #${exact.number}`);
     } else {
       employeeNumberInput.value = "";
-      setNameStatus("", "Kies je naam uit de dropdown, of laat staan als handmatig ingevoerd");
+      setNameStatus("", "Kies je naam uit de dropdown, of laat staan als ‘zelf gemaakte naam’");
     }
   });
 
   employeeNameInput.addEventListener("blur", () => {
-    // Delay so click on dropdown registers
+    // Delay zodat click op dropdown nog werkt
     setTimeout(() => {
       const q = employeeNameInput.value.trim();
       if (!q) { hideDropdown(); return; }
@@ -631,6 +646,7 @@
 
   employeeNameInput.addEventListener("focus", () => {
     const q = employeeNameInput.value.trim();
+    if (!q) return;
     const matches = filterEmployees(q);
     showDropdown(matches);
   });
@@ -638,14 +654,25 @@
   nameDropdown.addEventListener("mousedown", (e) => {
     const item = e.target.closest(".dd-item");
     if (!item) return;
+
+    const isManual = item.getAttribute("data-manual") === "1";
     const name = item.getAttribute("data-name");
     const num = item.getAttribute("data-num");
-    employeeNameInput.value = name;
-    employeeNumberInput.value = num;
-    setNameStatus("ok", `Herkenning OK • #${num}`);
+
+    if (isManual) {
+      // "Gebruik: <naam>" -> we halen alleen het stukje na "Gebruik:"
+      const chosen = name.replace(/^Gebruik:\s*/i, "").trim();
+      employeeNameInput.value = chosen;
+      employeeNumberInput.value = "";
+      setNameStatus("", "Zelf gemaakte naam geselecteerd • komt zo in WhatsApp");
+    } else {
+      employeeNameInput.value = name;
+      employeeNumberInput.value = num;
+      setNameStatus("ok", `Herkenning OK • #${num}`);
+    }
+
     hideDropdown();
-    // keep focus nice on mobile
-    employeeNameInput.blur();
+    employeeNameInput.blur(); // fijn op mobiel
   });
 
   document.addEventListener("click", (e) => {
@@ -748,12 +775,36 @@
   // Week change
   weekInput.addEventListener("change", updateWeekLabels);
 
-  // Default week on open = current ISO week
+  // Default week on open = week van de link (URL), anders huidige week
   (function initWeekDefault(){
-    const now = new Date();
-    const { year, week } = getISOWeek(now);
-    const ww = String(week).padStart(2, "0");
-    weekInput.value = `${year}-W${ww}`;
+    const params = new URLSearchParams(window.location.search);
+
+    // Ondersteuning:
+    // ?week=2026-W06  (aanrader)
+    // of ?jaar=2026&weeknr=6
+    const weekParam = (params.get("week") || params.get("w") || "").trim();
+    const jaarParam = (params.get("jaar") || "").trim();
+    const weeknrParam = (params.get("weeknr") || "").trim();
+
+    let valueToSet = "";
+
+    if (isValidWeekValue(weekParam)) {
+      valueToSet = weekParam;
+    } else if (jaarParam && weeknrParam) {
+      const y = parseInt(jaarParam, 10);
+      const w = parseInt(weeknrParam, 10);
+      if (y && w && w >= 1 && w <= 53) {
+        valueToSet = `${y}-W${String(w).padStart(2, "0")}`;
+      }
+    }
+
+    if (!valueToSet) {
+      const now = new Date();
+      const { year, week } = getISOWeek(now);
+      valueToSet = `${year}-W${String(week).padStart(2, "0")}`;
+    }
+
+    weekInput.value = valueToSet;
     updateWeekLabels();
   })();
 
@@ -791,7 +842,7 @@
 
     let message =
       `*Urenregistratie*\n` +
-      `Naam: ${match ? match.name : name}${isManual ? " (handmatig ingevoerd)" : ""}\n` +
+      `Naam: ${match ? match.name : name}${isManual ? " (zelf gemaakte naam)" : ""}\n` +
       (empNumber ? `Personeelsnummer: ${empNumber}\n` : `Personeelsnummer: -\n`) +
       `Week: ${weekLabel.textContent}\n` +
       `Periode: ${formatDate(dates[0])} t/m ${formatDate(dates[5])}\n\n`;
