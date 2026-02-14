@@ -15,6 +15,7 @@
       --border:#1f2937;
       --danger:#f97373;
       --ok:#22c55e;
+      --warn:#fbbf24;
       --radius-lg:18px;
       --shadow-lg:0 18px 45px rgba(15,23,42,.7);
     }
@@ -41,7 +42,6 @@
     }
     @media (min-width:640px){ .card{padding:22px 24px 22px} }
 
-    /* --- Logo (header) --- */
     .header{
       display:flex;
       align-items:center;
@@ -105,7 +105,6 @@
 
     label{font-size:.82rem;color:var(--muted);display:block;margin:0 0 6px}
 
-    /* iOS zoom fix: 16px minimum on inputs/textarea */
     input[type="text"], input[type="week"], input[type="number"], textarea, select, input[type="time"]{
       width:100%;
       border-radius:14px;
@@ -134,9 +133,11 @@
     .dot{width:8px;height:8px;border-radius:999px;background:var(--muted)}
     .dot.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(34,197,94,.15)}
     .dot.bad{background:var(--danger);box-shadow:0 0 0 4px rgba(249,115,115,.12)}
+    .dot.warn{background:var(--warn);box-shadow:0 0 0 4px rgba(251,191,36,.15)}
     .status span{color:var(--muted)}
     .status span.ok{color:var(--ok)}
     .status span.bad{color:var(--danger)}
+    .status span.warn{color:var(--warn)}
 
     .pill{
       display:inline-flex;align-items:center;gap:8px;
@@ -150,7 +151,6 @@
       box-shadow:0 0 0 4px rgba(56,189,248,.25);
     }
 
-    /* Custom dropdown for names */
     .name-wrap{position:relative}
     .dropdown{
       position:absolute;
@@ -193,23 +193,26 @@
       overflow:hidden;
     }
 
-    /* Watermark IN timesheet, altijd gecentreerd */
+    /* Watermark: minder schaduw */
     .timesheet-watermark{
       position:absolute;
       left:50%;
       top:50%;
       transform:translate(-50%,-50%) rotate(-6deg);
       width:min(520px,85%);
-      opacity:.07;
+      opacity:.10;
       pointer-events:none;
       user-select:none;
-      filter: drop-shadow(0 20px 40px rgba(0,0,0,.35));
+      filter:
+        brightness(1.25)
+        contrast(1.08)
+        drop-shadow(0 10px 18px rgba(0,0,0,.20));
       z-index:0;
     }
 
     .table-scroll{
       position:relative;
-      z-index:1; /* boven watermark */
+      z-index:1;
       overflow-x:auto;
       -webkit-overflow-scrolling:touch
     }
@@ -257,17 +260,40 @@
     .hour-input:focus,.project-code:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 1px var(--accent-soft)}
     .row-total{font-weight:700;font-variant-numeric:tabular-nums}
 
-    /* Mode select + tijd velden */
-    .mode-select{
-      width:100%;
-      max-width:110px;
+    /* === Segmented toggle (Uren | Tijden) === */
+    .mode-toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:0;
       border-radius:999px;
-      border:1px solid rgba(31,41,55,.9);
-      padding:7px 10px;
-      background:rgba(15,23,42,.95);
-      color:var(--text);
-      font-size:14px;
+      border:1px solid rgba(56,189,248,.35);
+      background:rgba(15,23,42,.85);
+      overflow:hidden;
+      box-shadow: 0 10px 20px rgba(0,0,0,.18);
+      user-select:none;
     }
+    .mode-btn{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:750;
+      padding:7px 12px;
+      cursor:pointer;
+      line-height:1;
+      min-width:64px;
+    }
+    .mode-btn:hover{color:var(--text)}
+    .mode-btn.active{
+      color:#061425;
+      background:linear-gradient(135deg, rgba(56,189,248,.95), rgba(34,197,94,.85));
+    }
+    .mode-btn:focus{
+      outline:none;
+      box-shadow:0 0 0 2px var(--accent-soft);
+    }
+
+    /* tijd velden */
     .time-wrap{
       display:flex;
       gap:6px;
@@ -284,6 +310,12 @@
       font-size:14px;
     }
     .time-sep{color:var(--muted);font-size:.85rem}
+
+    /* validatie: half ingevulde tijd rood */
+    .time-wrap.invalid input[type="time"]{
+      border-color: rgba(249,115,115,.65);
+      box-shadow: 0 0 0 2px rgba(249,115,115,.12);
+    }
 
     tfoot{background:rgba(15,23,42,.98)}
     tfoot td{font-weight:700;border-top:1px solid rgba(31,41,55,.9)}
@@ -357,6 +389,21 @@
       z-index:2;
     }
     .error-box.show{display:block}
+
+    .warn-box{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(251,191,36,.10);
+      border:1px solid rgba(251,191,36,.35);
+      color:#fde68a;
+      font-size:.95rem;
+      line-height:1.35;
+      position:relative;
+      z-index:2;
+    }
+    .warn-box.show{display:block}
   </style>
 </head>
 <body>
@@ -406,7 +453,6 @@
       </div>
 
       <div class="timesheet-wrapper" id="timesheetWrapper">
-        <!-- Watermark gecentreerd in timesheet -->
         <img class="timesheet-watermark" id="timesheetWatermark" src="Remove background project.png" alt="" aria-hidden="true" />
 
         <div class="table-scroll" id="tableScroll">
@@ -436,13 +482,12 @@
                 </td>
 
                 <td>
-                  <select class="mode-select" aria-label="Invoermodus">
-                    <option value="hours" selected>Uren</option>
-                    <option value="time">Tijden</option>
-                  </select>
+                  <div class="mode-toggle" role="group" aria-label="Invoermodus">
+                    <button type="button" class="mode-btn active" data-mode="hours" aria-pressed="true">Uren</button>
+                    <button type="button" class="mode-btn" data-mode="time" aria-pressed="false">Tijden</button>
+                  </div>
                 </td>
 
-                <!-- Dagcellen worden door JS gevuld (uren óf tijden) -->
                 <td class="daycell" data-day="0"></td>
                 <td class="daycell" data-day="1"></td>
                 <td class="daycell" data-day="2"></td>
@@ -476,6 +521,7 @@
         </button>
       </div>
 
+      <div class="warn-box" id="warnBox"></div>
       <div class="error-box" id="errorBox"></div>
 
       <div class="sticky-footer">
@@ -488,7 +534,6 @@
 </div>
 
 <script>
-  // === Medewerkerslijst (naam + personeelsnummer) ===
   const employees = [
     { number: "4001", name: "Bert van Horssen" },
     { number: "4002", name: "Hans van Horssen" },
@@ -527,7 +572,6 @@
     { number: "4105", name: "Marius Lingurar" },
   ];
 
-  // === DOM refs ===
   const bodyEl = document.getElementById("timesheetBody");
   const addRowBtn = document.getElementById("addRowBtn");
   const weekInput = document.getElementById("weekInput");
@@ -537,6 +581,7 @@
   const employeeNameInput = document.getElementById("employeeName");
   const employeeNumberInput = document.getElementById("employeeNumber");
   const errorBox = document.getElementById("errorBox");
+  const warnBox = document.getElementById("warnBox");
   const nameDropdown = document.getElementById("nameDropdown");
   const nameDot = document.getElementById("nameDot");
   const nameStatusText = document.getElementById("nameStatusText");
@@ -589,13 +634,22 @@
     return 1 - (dist / maxLen);
   }
 
+  function bestEmployeeMatch(query){
+    const q = normalize(query);
+    let best = null;
+    for (const e of employees){
+      const score = similarityScore(q, e.name);
+      if (!best || score > best.score) best = { ...e, score };
+    }
+    return best;
+  }
+
   function setNameStatus(type, text) {
-    nameDot.classList.remove("ok","bad");
-    if (type === "ok") nameDot.classList.add("ok");
-    if (type === "bad") nameDot.classList.add("bad");
-    nameStatusText.classList.remove("ok","bad");
-    if (type === "ok") nameStatusText.classList.add("ok");
-    if (type === "bad") nameStatusText.classList.add("bad");
+    nameDot.classList.remove("ok","bad","warn");
+    nameStatusText.classList.remove("ok","bad","warn");
+    if (type === "ok") { nameDot.classList.add("ok"); nameStatusText.classList.add("ok"); }
+    if (type === "bad") { nameDot.classList.add("bad"); nameStatusText.classList.add("bad"); }
+    if (type === "warn") { nameDot.classList.add("warn"); nameStatusText.classList.add("warn"); }
     nameStatusText.textContent = text;
   }
 
@@ -606,6 +660,14 @@
   function clearError() {
     errorBox.textContent = "";
     errorBox.classList.remove("show");
+  }
+  function showWarn(msg){
+    warnBox.textContent = msg;
+    warnBox.classList.add("show");
+  }
+  function clearWarn(){
+    warnBox.textContent = "";
+    warnBox.classList.remove("show");
   }
 
   function formatDate(d) {
@@ -682,7 +744,7 @@
     weekRangeText.textContent = `${formatDate(monday)} t/m ${formatDate(saturday)}`;
   }
 
-  // === Name dropdown logic ===
+  // === Name dropdown logic (fuzzy beter) ===
   function hideDropdown() {
     nameDropdown.classList.remove("show");
     nameDropdown.innerHTML = "";
@@ -712,9 +774,10 @@
       return { ...e, score, tokenHit };
     });
 
-    const base = q.length < 6 ? 0.70 : 0.62;
+    // veel toleranter (zodat "soortgelijke naam" niet meteen "nieuw" lijkt)
+    const base = q.length < 4 ? 0.50 : (q.length < 7 ? 0.56 : 0.60);
 
-    const filtered = scored
+    const list = scored
       .filter(x => x.tokenHit || x.score >= base)
       .sort((a,b) => (b.tokenHit - a.tokenHit) || (b.score - a.score))
       .slice(0, 8)
@@ -722,14 +785,14 @@
 
     const pretty = query.trim();
     if (pretty.length >= 2) {
-      filtered.push({
+      list.push({
         number: "",
         name: `Gebruik: ${pretty}`,
         manual: true
       });
     }
 
-    return filtered;
+    return list;
   }
 
   function applyEmployeeByName(name) {
@@ -739,14 +802,27 @@
       employeeNameInput.value = exact.name;
       employeeNumberInput.value = exact.number;
       setNameStatus("ok", `Geselecteerd • #${exact.number}`);
-      return { matched: true, employee: exact };
+      clearWarn();
+      return { matched: true, employee: exact, manual: false };
     }
+
+    // fuzzy: waarschuwing + suggestie
+    const best = bestEmployeeMatch(name);
     employeeNumberInput.value = "";
-    setNameStatus("", "Handmatige invoer • wordt als ‘zelf gemaakte naam’ gemarkeerd");
-    return { matched: false };
+
+    if (best && best.score >= 0.78) {
+      setNameStatus("warn", `Niet exact • Bedoelde je “${best.name}”? Selecteer uit de lijst.`);
+      showWarn(`Let op: deze naam lijkt sterk op “${best.name}”. Als dit dezelfde persoon is, kies die naam uit de lijst zodat het personeelsnummer gevuld wordt.`);
+      return { matched: false, manual: true, suggestion: best };
+    }
+
+    setNameStatus("bad", "Naam niet in lijst • wordt als ‘zelf gemaakte naam’ gemarkeerd");
+    showWarn("Let op: deze naam staat niet in de medewerkerslijst. Als dit klopt kun je doorgaan; in de export komt “zelf gemaakte naam” te staan.");
+    return { matched: false, manual: true };
   }
 
   employeeNameInput.addEventListener("input", () => {
+    clearWarn();
     const q = employeeNameInput.value.trim();
 
     if (!q) {
@@ -765,7 +841,12 @@
       setNameStatus("ok", `Geselecteerd • #${exact.number}`);
     } else {
       employeeNumberInput.value = "";
-      setNameStatus("", "Selecteer uit de lijst of gebruik handmatige invoer");
+      const best = bestEmployeeMatch(q);
+      if (best && best.score >= 0.78) {
+        setNameStatus("warn", `Lijkt op “${best.name}” • selecteer uit de lijst`);
+      } else {
+        setNameStatus("", "Selecteer uit de lijst of gebruik handmatige invoer");
+      }
     }
   });
 
@@ -796,11 +877,12 @@
       const chosen = name.replace(/^Gebruik:\s*/i, "").trim();
       employeeNameInput.value = chosen;
       employeeNumberInput.value = "";
-      setNameStatus("", "Handmatige invoer geselecteerd");
+      applyEmployeeByName(chosen);
     } else {
       employeeNameInput.value = name;
       employeeNumberInput.value = num;
       setNameStatus("ok", `Geselecteerd • #${num}`);
+      clearWarn();
     }
 
     hideDropdown();
@@ -816,7 +898,7 @@
     const day = td.getAttribute("data-day");
     if (mode === "time") {
       td.innerHTML = `
-        <div class="time-wrap">
+        <div class="time-wrap" data-day="${day}">
           <input type="time" class="time-from" aria-label="Van" />
           <span class="time-sep">–</span>
           <input type="time" class="time-to" aria-label="Tot" />
@@ -830,39 +912,40 @@
     }
   }
 
-  function initRow(row){
-    const modeSelect = row.querySelector(".mode-select");
-    const mode = (modeSelect?.value || row.getAttribute("data-mode") || "hours");
-    row.setAttribute("data-mode", mode);
-
-    row.querySelectorAll(".daycell").forEach(td => renderDayCell(td, mode));
-    row.querySelector(".row-total").textContent = "0,00";
-
-    const desc = row.querySelector(".desc");
-    desc.value = "";
-    desc.classList.remove("show");
-    row.querySelector(".btn-toggle-desc").innerHTML = "<span>＋</span> Omschrijving";
-
-    row.querySelector(".project-code").value = "";
+  function setToggleUI(row, mode){
+    const btns = row.querySelectorAll(".mode-btn");
+    btns.forEach(b => {
+      const isActive = b.getAttribute("data-mode") === mode;
+      b.classList.toggle("active", isActive);
+      b.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
   }
 
   function setRowMode(row, mode){
     row.setAttribute("data-mode", mode);
+    setToggleUI(row, mode);
     row.querySelectorAll(".daycell").forEach(td => renderDayCell(td, mode));
     recalcRow(row);
     recalcTotals();
   }
 
-  // === Hours math ===
+  // === Numbers ===
   function parseNumber(v) {
     const n = parseFloat((v || "").toString().replace(",", "."));
     return isNaN(n) ? 0 : n;
   }
-
   function setPrettyValue(input) {
     const n = parseNumber(input.value);
     if (!input.value) return;
     input.value = n ? n.toFixed(2) : "";
+  }
+
+  function validateTimeWrap(wrap){
+    const from = wrap.querySelector(".time-from")?.value || "";
+    const to = wrap.querySelector(".time-to")?.value || "";
+    const half = (!!from && !to) || (!from && !!to);
+    wrap.classList.toggle("invalid", half);
+    return { from, to, half };
   }
 
   function recalcRow(row) {
@@ -870,10 +953,10 @@
     let sum = 0;
 
     if (mode === "time") {
-      row.querySelectorAll(".daycell").forEach(td => {
-        const from = td.querySelector(".time-from")?.value || "";
-        const to = td.querySelector(".time-to")?.value || "";
-        sum += durationHours(from, to);
+      row.querySelectorAll(".time-wrap").forEach(wrap => {
+        const { from, to } = validateTimeWrap(wrap);
+        // alleen meetellen als beide gevuld zijn
+        if (from && to) sum += durationHours(from, to);
       });
     } else {
       const inputs = row.querySelectorAll(".hour-input");
@@ -893,9 +976,10 @@
       const mode = row.getAttribute("data-mode") || "hours";
       if (mode === "time") {
         row.querySelectorAll(".daycell").forEach((td, idx) => {
-          const from = td.querySelector(".time-from")?.value || "";
-          const to = td.querySelector(".time-to")?.value || "";
-          dayTotals[idx] += durationHours(from, to);
+          const wrap = td.querySelector(".time-wrap");
+          if (!wrap) return;
+          const { from, to } = validateTimeWrap(wrap);
+          if (from && to) dayTotals[idx] += durationHours(from, to);
         });
       } else {
         const inputs = row.querySelectorAll(".hour-input");
@@ -919,15 +1003,29 @@
     recalcTotals();
   }
 
-  // input events (uren + tijden + mode)
+  // === Events (uren + tijden + toggle) ===
+  bodyEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mode-btn");
+    if (btn) {
+      const row = btn.closest(".timesheet-row");
+      if (!row) return;
+      setRowMode(row, btn.getAttribute("data-mode"));
+      return;
+    }
+
+    if (e.target.closest(".btn-toggle-desc")) {
+      const tbtn = e.target.closest(".btn-toggle-desc");
+      const row = tbtn.closest(".timesheet-row");
+      const desc = row.querySelector(".desc");
+      const isOpen = desc.classList.toggle("show");
+      tbtn.innerHTML = isOpen ? "<span>–</span> Omschrijving" : "<span>＋</span> Omschrijving";
+      if (isOpen) desc.focus();
+    }
+  });
+
   bodyEl.addEventListener("input", (e) => {
     const row = e.target.closest(".timesheet-row");
     if (!row) return;
-
-    if (e.target.classList.contains("mode-select")) {
-      setRowMode(row, e.target.value);
-      return;
-    }
 
     if (
       e.target.classList.contains("hour-input") ||
@@ -939,7 +1037,6 @@
     }
   });
 
-  // netjes afronden op blur (uren)
   bodyEl.addEventListener("blur", (e) => {
     if (e.target.classList && e.target.classList.contains("hour-input")) {
       setPrettyValue(e.target);
@@ -949,28 +1046,14 @@
     }
   }, true);
 
-  // Toggle description per row
-  bodyEl.addEventListener("click", (e) => {
-    if (e.target.closest(".btn-toggle-desc")) {
-      const btn = e.target.closest(".btn-toggle-desc");
-      const row = btn.closest(".timesheet-row");
-      const desc = row.querySelector(".desc");
-      const isOpen = desc.classList.toggle("show");
-      btn.innerHTML = isOpen ? "<span>–</span> Omschrijving" : "<span>＋</span> Omschrijving";
-      if (isOpen) desc.focus();
-    }
-  });
-
   // Add row
   addRowBtn.addEventListener("click", () => {
     const firstRow = bodyEl.querySelector(".timesheet-row");
     const newRow = firstRow.cloneNode(true);
 
-    // zet mode default op uren
     newRow.setAttribute("data-mode", "hours");
-    newRow.querySelector(".mode-select").value = "hours";
+    setToggleUI(newRow, "hours");
 
-    // reset velden + render dagcellen opnieuw
     newRow.querySelectorAll(".daycell").forEach(td => renderDayCell(td, "hours"));
     newRow.querySelector(".project-code").value = "";
     newRow.querySelector(".row-total").textContent = "0,00";
@@ -982,7 +1065,6 @@
 
     bodyEl.appendChild(newRow);
     recalcTotals();
-
     setTimeout(() => newRow.querySelector(".project-code").focus(), 50);
   });
 
@@ -991,14 +1073,12 @@
     if (e.target.classList.contains("btn-remove-row")) {
       const rows = bodyEl.querySelectorAll(".timesheet-row");
       if (rows.length === 1) {
-        // reset single row
         const row = rows[0];
         row.querySelector(".project-code").value = "";
-        row.querySelector(".mode-select").value = "hours";
         row.setAttribute("data-mode", "hours");
+        setToggleUI(row, "hours");
         row.querySelectorAll(".daycell").forEach(td => renderDayCell(td, "hours"));
         row.querySelector(".row-total").textContent = "0,00";
-
         row.querySelector(".desc").value = "";
         row.querySelector(".desc").classList.remove("show");
         row.querySelector(".btn-toggle-desc").innerHTML = "<span>＋</span> Omschrijving";
@@ -1012,10 +1092,8 @@
   // Week change
   weekInput.addEventListener("change", updateWeekLabels);
 
-  // Default week on open = week van de link (URL), anders huidige week
   (function initWeekDefault(){
     const params = new URLSearchParams(window.location.search);
-
     const weekParam = (params.get("week") || params.get("w") || "").trim();
     const jaarParam = (params.get("jaar") || "").trim();
     const weeknrParam = (params.get("weeknr") || "").trim();
@@ -1042,7 +1120,7 @@
     updateWeekLabels();
   })();
 
-  // Submit -> WhatsApp export with real dates
+  // Submit -> WhatsApp export
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     clearError();
@@ -1072,8 +1150,15 @@
     const isManual = !match;
     const empNumber = match ? match.number : "";
 
-    const rows = bodyEl.querySelectorAll(".timesheet-row");
+    // extra waarschuwing als naam niet in lijst staat
+    if (isManual) {
+      const best = bestEmployeeMatch(name);
+      const suggestionText = (best && best.score >= 0.78) ? `\n\nTip: lijkt op “${best.name}”. Wil je die kiezen uit de lijst?` : "";
+      // geen blokkade, alleen waarschuwing (zoals je vroeg)
+      showWarn("Let op: Naam staat niet exact in de lijst. In WhatsApp komt ‘zelf gemaakte naam’. " + suggestionText);
+    }
 
+    const rows = bodyEl.querySelectorAll(".timesheet-row");
     let message =
       `*Urenregistratie*\n` +
       `Naam: ${match ? match.name : name}${isManual ? " (zelf gemaakte naam)" : ""}\n` +
@@ -1090,24 +1175,26 @@
       const desc = row.querySelector(".desc").value.trim();
       const mode = row.getAttribute("data-mode") || "hours";
 
-      // Verzamel dagwaarden
       const dayLines = [];
       let hasAny = false;
 
       if (mode === "time") {
         row.querySelectorAll(".daycell").forEach((td, i) => {
-          const from = td.querySelector(".time-from")?.value || "";
-          const to = td.querySelector(".time-to")?.value || "";
-          const hrs = durationHours(from, to);
+          const wrap = td.querySelector(".time-wrap");
+          if (!wrap) return;
+          const { from, to, half } = validateTimeWrap(wrap);
+          if (half) {
+            showError("Er is een dag met half ingevulde tijden (alleen Van of alleen Tot). Vul beide in of maak leeg.");
+            wrap.querySelector(".time-from")?.focus();
+            return;
+          }
           if (from && to) {
             hasAny = true;
+            const hrs = durationHours(from, to);
             dayLines.push(`${dayLabels[i]} ${formatDate(dates[i])}: ${from}–${to} (${formatHours(hrs)} u)`);
-          } else if (hrs > 0) {
-            // praktisch nooit, maar voor de zekerheid
-            hasAny = true;
-            dayLines.push(`${dayLabels[i]} ${formatDate(dates[i])}: ${formatHours(hrs)} u`);
           }
         });
+        if (errorBox.classList.contains("show")) return;
       } else {
         const inputs = row.querySelectorAll(".hour-input");
         inputs.forEach((input, i) => {
@@ -1119,7 +1206,6 @@
         });
       }
 
-      // Skip empty row
       if (!project && !hasAny && !desc) continue;
 
       if (!project) {
@@ -1134,7 +1220,6 @@
       if (desc) message += `Omschrijving: ${desc}\n`;
       if (dayLines.length) message += dayLines.join("\n") + "\n";
 
-      // Rij totaal
       const rowTotal = recalcRow(row);
       message += `Totaal: ${formatHours(rowTotal)} u\n\n`;
     }
@@ -1146,7 +1231,7 @@
 
     message += `*Weektotaal:* ${weekTotalEl.textContent || "0,00"} u`;
 
-    const telefoonnummer = "31640022684"; // E164 zonder +
+    const telefoonnummer = "31640022684";
     const url = "https://wa.me/" + telefoonnummer + "?text=" + encodeURIComponent(message);
     window.location.href = url;
   });
@@ -1154,9 +1239,9 @@
   // Initial status + init first row
   setNameStatus("", "Geen selectie");
 
-  // render dagcellen van startregel
   (function initFirstRow(){
     const row = bodyEl.querySelector(".timesheet-row");
+    setToggleUI(row, "hours");
     row.querySelectorAll(".daycell").forEach(td => renderDayCell(td, "hours"));
     recalcAll();
   })();
